@@ -1,0 +1,20 @@
+{
+    "usuarios": [
+      {
+        "nombre": "usuario1",
+        "contrasena": "contrasena1",
+        "tipo": "usuario"
+      },
+      {
+        "nombre": "usuario2",
+        "contrasena": "contrasena2",
+        "tipo": "usuario"
+      },
+      {
+        "nombre": "usuario3",
+        "contrasena": "contrasena3",
+        "tipo": "admin"
+      }
+    ]
+  }
+  
