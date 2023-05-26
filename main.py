@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 import json
+import serial
+
 
 class PaginaLogin(tk.Frame):
     def __init__(self, master, notebook):
@@ -45,6 +47,7 @@ class PaginaLogin(tk.Frame):
             self.notebook.add(PaginaEnviarSenal(self.notebook), text="Enviar Señales")
             self.notebook.add(PaginaVerEstatus(self.notebook), text="Ver Estado")
             self.notebook.select(1)  # Seleccionar la página de Alertas
+            self.notebook.forget(0)
         else:
             messagebox.showerror("Error de login", "Nombre de usuario o contraseña incorrectos")
 
@@ -62,12 +65,42 @@ class PaginaAlertas(tk.Frame):
         self.label_alertas = tk.Label(self, text="Alertas:")
         self.label_alertas.pack()
 
+        # Configurar el puerto serial
+        puerto = 'COM3'  # Cambia esto al puerto serial correcto en tu sistema
+        velocidad = 9600  # Velocidad de comunicación del puerto serial
+
+        # Abrir la conexión con el puerto serial
+        self.arduino = serial.Serial(puerto, velocidad)
+
+        # Leer datos del puerto serial
+        self.leer_serial()
+
+    def leer_serial(self):
+        if self.arduino.in_waiting > 0:
+            dato = self.arduino.readline().decode().rstrip()  # Leer una línea de datos y decodificarla
+            print("Dato recibido desde Arduino:", dato)
+
+        # Volver a llamar a la función para seguir leyendo los datos
+        self.after(100, self.leer_serial)
+
 class PaginaEnviarSenal(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
 
-        self.boton_enviar_senal = tk.Button(self, text="Enviar Señal")
+        self.boton_enviar_senal = tk.Button(self, text="Enviar Señal", command=self.enviar_senal)
         self.boton_enviar_senal.pack()
+
+        # Configurar el puerto serial
+        puerto = 'COM3'  # Cambia esto al puerto serial correcto en tu sistema
+        velocidad = 9600  # Velocidad de comunicación del puerto serial
+
+        # Abrir la conexión con el puerto serial
+        self.arduino = serial.Serial(puerto, velocidad)
+
+    def enviar_senal(self):
+        # Aquí puedes enviar la señal al Arduino
+        # Por ejemplo, puedes escribir un valor en el puerto serial
+        self.arduino.write(b'Senal para apagar el sistema')  # Cambia el contenido de la señal según tus necesidades
 
 class PaginaVerEstatus(tk.Frame):
     def __init__(self, master):
