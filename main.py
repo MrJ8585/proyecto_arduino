@@ -58,6 +58,47 @@ class PaginaAdmin(tk.Frame):
         self.label_admin = tk.Label(self, text="¡Bienvenido, Administrador!")
         self.label_admin.pack()
 
+        self.label_usuario = tk.Label(self, text="Usuario:")
+        self.label_usuario.pack()
+        self.entry_usuario = tk.Entry(self)
+        self.entry_usuario.pack()
+
+        self.label_contrasena = tk.Label(self, text="Contraseña:")
+        self.label_contrasena.pack()
+        self.entry_contrasena = tk.Entry(self, show="*")
+        self.entry_contrasena.pack()
+
+        self.boton_submit = tk.Button(self, text="Submit", command=self.agregar_usuario)
+        self.boton_submit.pack()
+
+    def agregar_usuario(self):
+        usuario = self.entry_usuario.get()
+        contrasena = self.entry_contrasena.get()
+
+        datos_usuario = {
+            "nombre": usuario,
+            "contrasena": contrasena,
+            "tipo": "usuario"
+        }
+
+        # Ruta del archivo JSON
+        ruta_json = "BD/usuarios.json"
+
+        try:
+            with open(ruta_json, "r") as archivo:
+                data = json.load(archivo)
+        except FileNotFoundError:
+            data = {"usuarios": []}
+
+        data["usuarios"].append(datos_usuario)
+        with open(ruta_json, "w") as archivo:
+            json.dump(data, archivo)
+
+        # Mostrar mensaje de éxito
+        tk.messagebox.showinfo("Éxito", "Usuario agregado correctamente")
+
+
+
 
 class PaginaAlertas(tk.Frame):
     def __init__(self, master, puerto_serial):
@@ -66,7 +107,7 @@ class PaginaAlertas(tk.Frame):
         self.label_alertas = tk.Label(self, text="Alertas:")
         self.label_alertas.pack()
 
-        self.label_datos = tk.Label(self, text="")
+        self.label_datos = tk.Label(self, text="Datos recibidos desde Arduino: No se ha detectado movimiento")
         self.label_datos.pack()
 
         self.boton_enviar = tk.Button(self, text="Apagar alarma", command=self.enviar_caracter_a)
@@ -74,18 +115,23 @@ class PaginaAlertas(tk.Frame):
 
         self.puerto_serial = puerto_serial
 
+        self.leer_serial()  # Iniciar la lectura del puerto serial
+
     def leer_serial(self):
         if self.puerto_serial.in_waiting > 0:
-            dato = self.puerto_serial.readline()
+            datos = self.puerto_serial.read(self.puerto_serial.in_waiting)
             try:
-                dato_decodificado = dato.decode('utf-8').rstrip()
-                print(dato_decodificado)
-                self.label_datos.config(text="Dato recibido desde Arduino: " + dato_decodificado)
+                datos_decodificados = datos.decode('utf-8').rstrip()
+                if datos_decodificados == "Se detectó movimiento":
+                    self.label_datos.config(text="Datos recibidos desde Arduino: " + datos_decodificados)
+                elif datos_decodificados == "Sistema apagado":
+                    self.label_datos.config(text="Datos recibidos desde Arduino: " + datos_decodificados)
+                else:
+                    self.label_datos.config(text="Datos recibidos desde Arduino: No se ha detectado movimiento")
             except UnicodeDecodeError:
-                print("Error de decodificación en el dato recibido")
+                print("Error de decodificación en los datos recibidos")
 
-        # Programar la siguiente lectura después de 100 ms
-        self.after(100, self.leer_serial)
+        self.after(100, self.leer_serial)  # Volver a leer el puerto serial después de 100 ms
 
     def enviar_caracter_a(self):
         self.puerto_serial.write(b'A')
@@ -95,7 +141,7 @@ class PaginaVerEstatus(tk.Frame):
     def __init__(self, master, puerto_serial):
         super().__init__(master)
 
-        self.label_estado_arduino = tk.Label(self, text="Estado del Arduino: Sin conexión")
+        self.label_estado_arduino = tk.Label(self, text="Estado Sistema")
         self.label_estado_arduino.pack()
 
         self.puerto_serial = puerto_serial
@@ -103,31 +149,9 @@ class PaginaVerEstatus(tk.Frame):
         self.boton_enviar = tk.Button(self, text="Apagar/Encender sistema", command=self.enviar_senal)
         self.boton_enviar.pack()
 
-    def actualizar_estado_arduino(self):
-        if self.puerto_serial.in_waiting > 0:
-            dato = self.puerto_serial.readline()
-            try:
-                dato_decodificado = dato.decode('utf-8').strip()
-                estado = "Estado del Arduino: " + dato_decodificado
-                self.label_estado_arduino.config(text=estado)
-            except UnicodeDecodeError:
-                print("Error de decodificación en el dato recibido")
-
-        # Programar la siguiente actualización después de 100 ms
-        self.after(100, self.actualizar_estado_arduino)
-
-    def leer_estado_arduino(self):
-        if self.puerto_serial.in_waiting > 0:
-            dato = self.puerto_serial.readline()
-            try:
-                dato_decodificado = dato.decode('utf-8').strip()
-                return "Estado del Arduino: " + dato_decodificado
-            except UnicodeDecodeError:
-                print("Error de decodificación en el dato recibido")
-        return "Estado del Arduino: Sin conexión"
-
     def enviar_senal(self):
         self.puerto_serial.write(b'P')
+
 
 
 class PaginaPrincipal(tk.Tk):

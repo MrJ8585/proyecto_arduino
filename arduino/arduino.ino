@@ -46,11 +46,15 @@ void loop()
       sistema_prendido = !sistema_prendido;  // Cambiar el estado del sistema
       if (sistema_prendido)
       {
+        Serial.begin(4800);  // Cambiar la velocidad de baudios a 4800
         Serial.println("Sistema prendido");
+        Serial.begin(9600);  // Restaurar la velocidad de baudios a 9600
       }
       else
       {
+        Serial.begin(4800);  // Cambiar la velocidad de baudios a 4800
         Serial.println("Sistema apagado");
+        Serial.begin(9600);  // Restaurar la velocidad de baudios a 9600
         sensor_encendido = false;
         digitalWrite(LED, LOW);
         digitalWrite(piezo, LOW);
